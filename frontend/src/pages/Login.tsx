@@ -423,6 +423,31 @@ const Login: React.FC<LoginProps> = ({
           height: 1px;
           background: rgba(255, 255, 255, 0.06);
         }
+
+        /* Mobile Viewport Optimizations */
+        @media (max-width: 480px) {
+          .login-root {
+            padding: 1.25rem 0.875rem;
+            justify-content: center;
+          }
+          .login-card {
+            padding: 1.5rem 1.125rem;
+            border-radius: 14px;
+          }
+          .glass-input {
+            font-size: 16px; /* Prevents auto-zoom on mobile iOS Safari */
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+          }
+          .btn-submit {
+            padding: 0.875rem 1rem;
+            font-size: 14px;
+          }
+          .btn-oauth {
+            padding: 0.625rem 0.5rem;
+            font-size: 11px;
+          }
+        }
       `}</style>
 
       <div className="login-root">

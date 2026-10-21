@@ -52,6 +52,19 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
 
+  // Mobile drawer & viewport detection
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // In-dashboard password management
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -509,13 +522,278 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
           justify-content: center;
           padding: 1.5rem;
         }
+
+        /* Workspace Grid */
+        .workspace-grid {
+          padding: 1.75rem 2rem;
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 1.5rem;
+          flex: 1;
+        }
+
+        /* Mobile specific elements (hidden on desktop) */
+        .sidebar-backdrop {
+          display: none;
+        }
+        .btn-hamburger {
+          display: none;
+        }
+        .mobile-close-btn {
+          display: none;
+        }
+        .mobile-tab-strip {
+          display: none;
+        }
+        .mobile-bottom-nav {
+          display: none;
+        }
+
+        /* Responsive Tablet & Small Laptop (<= 1024px) */
+        @media (max-width: 1024px) {
+          .workspace-grid {
+            grid-template-columns: 1fr !important;
+            padding: 1.25rem 1rem !important;
+            gap: 1.25rem !important;
+          }
+        }
+
+        /* Responsive Mobile Phones (<= 768px) */
+        @media (max-width: 768px) {
+          .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            height: 100vh;
+            width: 280px;
+            max-width: 82vw;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+          }
+          .sidebar.mobile-open {
+            transform: translateX(0);
+          }
+          .sidebar-backdrop {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 9998;
+          }
+          .mobile-close-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #94A3B8;
+            cursor: pointer;
+          }
+          .btn-hamburger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #F8FAFC;
+            cursor: pointer;
+            flex-shrink: 0;
+          }
+          .btn-hamburger:hover {
+            background: rgba(255, 255, 255, 0.08);
+          }
+          .main {
+            margin-left: 0 !important;
+            padding-bottom: 74px !important; /* space for fixed mobile bottom bar */
+          }
+          .topbar {
+            padding: 0.75rem 0.875rem !important;
+            gap: 0.5rem;
+          }
+          .topbar-actions {
+            margin-right: 0 !important;
+            gap: 0.375rem !important;
+          }
+          .breadcrumb-sub {
+            display: none !important;
+          }
+          .seg-bar {
+            width: 100%;
+            display: flex;
+            overflow-x: auto;
+          }
+          .seg-btn {
+            flex: 1;
+            text-align: center;
+            padding: 0.375rem 0.375rem;
+            font-size: 11px;
+            white-space: nowrap;
+          }
+          .chrono-circle-wrap {
+            max-width: 220px !important;
+            max-height: 220px !important;
+          }
+          .chrono-time-display {
+            font-size: 44px !important;
+          }
+          .glass-card {
+            padding: 1.25rem 1rem !important;
+            border-radius: 12px;
+          }
+          .workspace-grid {
+            padding: 1rem 0.75rem !important;
+            gap: 1rem !important;
+          }
+          .mobile-tab-strip {
+            display: flex;
+            padding: 0.625rem 0.875rem 0.25rem;
+            gap: 0.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          .mobile-tab-strip::-webkit-scrollbar { display: none; }
+          .mobile-tab-pill {
+            padding: 0.375rem 0.875rem;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            color: #94A3B8;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+          }
+          .mobile-tab-pill.active {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: rgba(244, 63, 94, 0.35);
+            color: #FB7185;
+          }
+
+          /* Fixed Mobile Bottom App Bar */
+          .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 62px;
+            background: rgba(13, 16, 23, 0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 1000;
+            padding: 0 0.5rem;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+          }
+          .mobile-tab-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: transparent;
+            border: none;
+            color: #64748B;
+            padding: 6px 0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+          }
+          .mobile-tab-btn.active {
+            color: #FB7185;
+          }
+          .mobile-tab-btn.active span {
+            color: #FB7185;
+          }
+          .mobile-tab-badge {
+            position: absolute;
+            top: -4px;
+            right: -8px;
+            background: #F43F5E;
+            color: #FFF;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 9999px;
+            min-width: 14px;
+            text-align: center;
+          }
+          .mobile-pulse-dot {
+            position: absolute;
+            top: -2px;
+            right: -4px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10B981;
+            box-shadow: 0 0 6px #10B981;
+          }
+          .sound-preset-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .workspace-col {
+            display: contents !important;
+          }
+
+          /* Mobile activeTab panel switching */
+          .tab-view-timer .tasks-panel,
+          .tab-view-timer .velocity-panel,
+          .tab-view-timer .sounds-panel {
+            display: none !important;
+          }
+          .tab-view-tasks .chrono-panel,
+          .tab-view-tasks .metrics-panel,
+          .tab-view-tasks .velocity-panel,
+          .tab-view-tasks .sounds-panel {
+            display: none !important;
+          }
+          .tab-view-analytics .chrono-panel,
+          .tab-view-analytics .tasks-panel,
+          .tab-view-analytics .sounds-panel {
+            display: none !important;
+          }
+          .tab-view-sounds .chrono-panel,
+          .tab-view-sounds .tasks-panel,
+          .tab-view-sounds .metrics-panel,
+          .tab-view-sounds .velocity-panel {
+            display: none !important;
+          }
+          .tab-view-settings .tasks-panel,
+          .tab-view-settings .velocity-panel,
+          .tab-view-settings .sounds-panel {
+            display: none !important;
+          }
+        }
       `}</style>
 
       <div className="dash-root">
         <div className="ambient-mesh" />
 
+        {/* Mobile Backdrop */}
+        <div
+          className={`sidebar-backdrop${isMobileMenuOpen ? ' open' : ''}`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+
         {/* ── SIDEBAR ── */}
-        <aside className="sidebar">
+        <aside className={`sidebar${isMobileMenuOpen ? ' mobile-open' : ''}`}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Workspace Brand */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0.5rem' }}>
@@ -531,6 +809,14 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                   <div style={{ fontSize: 11, color: '#64748B' }}>Deep Work Space</div>
                 </div>
               </div>
+              <button
+                type="button"
+                className="mobile-close-btn"
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Close sidebar"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+              </button>
             </div>
 
             {/* Navigation Tabs */}
@@ -548,6 +834,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                     key={item.id}
                     onClick={() => {
                       setActiveTab(item.id as any);
+                      setIsMobileMenuOpen(false);
                       if (item.id === 'settings') setIsSettingsOpen(true);
                     }}
                     className={`nav-item${isActive ? ' active' : ''}`}
@@ -614,26 +901,37 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
         <main className="main">
           {/* Topbar */}
           <header className="topbar">
-            {/* Breadcrumb & Date */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 13, color: '#64748B', fontWeight: 500 }}>
-                <span>Workspace</span>
-                <span>/</span>
-                <span style={{ color: '#F1F5F9', fontWeight: 600 }}>Deep Focus Session</span>
+            {/* Hamburger & Breadcrumb */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', minWidth: 0 }}>
+              <button
+                type="button"
+                className="btn-hamburger"
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Open sidebar menu"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>menu</span>
+              </button>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: 13, color: '#64748B', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span className="breadcrumb-sub">Workspace /</span>
+                  <span style={{ color: '#F1F5F9', fontWeight: 600 }}>Deep Focus</span>
+                </div>
+                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {today} • {greeting}, {firstName}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{today} • {greeting}, {firstName}</div>
             </div>
 
             {/* Quick Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginRight: '160px' }}>
+            <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
               {/* Daily Goal Pill */}
               <button
                 onClick={() => setIsGoalModalOpen(true)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.625rem',
-                  padding: '0.375rem 0.875rem',
+                  gap: '0.5rem',
+                  padding: '0.375rem 0.625rem',
                   borderRadius: 9999,
                   background: 'rgba(255, 255, 255, 0.03)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -645,7 +943,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                 }}
               >
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F43F5E', display: 'inline-block' }} />
-                <span>{dailySessions}/{dailyGoal} Sessions</span>
+                <span>{dailySessions}/{dailyGoal}</span>
               </button>
 
               {/* Sound status pill */}
@@ -654,8 +952,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.375rem 0.75rem',
+                  gap: '0.375rem',
+                  padding: '0.375rem 0.625rem',
                   borderRadius: 9999,
                   background: isPlayingAudio ? 'rgba(244, 63, 94, 0.12)' : 'rgba(255, 255, 255, 0.03)',
                   border: isPlayingAudio ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
@@ -666,7 +964,6 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                 }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{isPlayingAudio ? 'graphic_eq' : 'music_note'}</span>
-                <span style={{ fontSize: 11, fontWeight: 500 }}>{activeSoundObj.label}</span>
                 {isPlayingAudio && (
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 12 }}>
                     <span className="wave-bar" style={{ animationDelay: '0s' }} />
@@ -681,8 +978,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                 <button
                   onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
                   style={{
-                    width: 36,
-                    height: 36,
+                    width: 34,
+                    height: 34,
                     borderRadius: '50%',
                     background: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -695,7 +992,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: 18 }}>notifications</span>
                   {unreadNotifications > 0 && (
-                    <span style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#F43F5E' }} />
+                    <span style={{ position: 'absolute', top: 5, right: 5, width: 6, height: 6, borderRadius: '50%', background: '#F43F5E' }} />
                   )}
                 </button>
 
@@ -705,7 +1002,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                       position: 'absolute',
                       top: '115%',
                       right: 0,
-                      width: 300,
+                      width: isMobile ? 'calc(100vw - 2rem)' : 300,
+                      maxWidth: 320,
                       background: '#111420',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: 12,
@@ -718,7 +1016,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#F1F5F9' }}>Notifications</span>
                       <button onClick={() => setNotifications([])} style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: 11, cursor: 'pointer' }}>Clear</button>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
                       {notifications.map(n => (
                         <div key={n.id} style={{ padding: '0.5rem', borderRadius: 6, background: 'rgba(255,255,255,0.02)' }}>
                           <div style={{ fontSize: 11, fontWeight: 600, color: '#E2E8F0' }}>{n.title}</div>
@@ -730,12 +1028,12 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                 )}
               </div>
 
-              {/* Preferences */}
+              {/* Preferences button */}
               <button
                 onClick={() => setIsSettingsOpen(true)}
                 style={{
-                  width: 36,
-                  height: 36,
+                  width: 34,
+                  height: 34,
                   borderRadius: '50%',
                   background: 'rgba(255, 255, 255, 0.03)',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -751,16 +1049,35 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
             </div>
           </header>
 
+          {/* Mobile Tab Pill Strip */}
+          <div className="mobile-tab-strip">
+            {[
+              { id: 'timer', label: '⏱️ Timer' },
+              { id: 'tasks', label: `🎯 Tasks (${tasks.filter(t => !t.completed).length})` },
+              { id: 'analytics', label: '📊 Insights' },
+              { id: 'sounds', label: isPlayingAudio ? '🎧 Audio (ON)' : '🎧 Audio' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`mobile-tab-pill${activeTab === tab.id ? ' active' : ''}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           {/* ── WORKSPACE GRID ── */}
-          <div style={{ padding: '1.75rem 2rem', display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem', flex: 1 }}>
+          <div className={`workspace-grid tab-view-${activeTab}`}>
 
             {/* LEFT COLUMN: CHRONOGRAPH TIMER & TASKS */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="workspace-col" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
               {/* ── PRECISION CHRONOGRAPH ── */}
-              <section className="glass-card" style={{ padding: '1.75rem 2rem', position: 'relative', overflow: 'hidden' }}>
+              <section className="glass-card chrono-panel" style={{ padding: '1.75rem 2rem', position: 'relative', overflow: 'hidden' }}>
                 {/* Mode Selector */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div className="seg-bar">
                     {(['focus', 'short', 'long'] as const).map(m => (
                       <button key={m} className={`seg-btn${mode === m ? ' active' : ''}`} onClick={() => handleModeChange(m)}>
@@ -776,8 +1093,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
 
                 {/* Circular Gauge */}
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0 1.25rem' }}>
-                  <div style={{ position: 'relative', width: 250, height: 250 }}>
-                    <svg width="250" height="250" viewBox="0 0 250 250" style={{ transform: 'rotate(-90deg)' }}>
+                  <div className="chrono-circle-wrap" style={{ position: 'relative', width: 250, height: 250 }}>
+                    <svg width="100%" height="100%" viewBox="0 0 250 250" style={{ transform: 'rotate(-90deg)' }}>
                       <defs>
                         <linearGradient id="chronoSvg" x1="0%" y1="0%" x2="100%" y2="100%">
                           <stop offset="0%" stopColor="#F43F5E" />
@@ -806,7 +1123,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                       <span style={{ fontSize: 11, fontWeight: 600, color: '#FB7185', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.08em', marginBottom: 4 }}>
                         CYCLE {intervalCount} OF 4
                       </span>
-                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', color: '#F8FAFC', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                      <div className="chrono-time-display" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 56, fontWeight: 700, letterSpacing: '-0.04em', color: '#F8FAFC', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
                         {fmt(time)}
                       </div>
                       <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
@@ -873,8 +1190,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
               </section>
 
               {/* ── LINEAR-STYLE TASK MANAGER ── */}
-              <section className="glass-card" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <section className="glass-card tasks-panel" style={{ padding: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <div>
                     <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#F8FAFC' }}>Focus Tasks</h2>
                     <span style={{ fontSize: 11, color: '#64748B' }}>{completedCount} of {tasks.length} completed</span>
@@ -1048,10 +1365,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
             </div>
 
             {/* RIGHT COLUMN: STATS & SOUNDSCAPE */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="workspace-col" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
               {/* Metric Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <div className="metrics-panel" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
                 {/* Focus Time */}
                 <div className="glass-card" style={{ gridColumn: '1 / -1', padding: '1rem 1.25rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -1083,7 +1400,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
               </div>
 
               {/* Focus Velocity Chart */}
-              <section className="glass-card" style={{ padding: '1.25rem' }}>
+              <section className="glass-card velocity-panel" style={{ padding: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <div>
                     <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#F8FAFC' }}>Weekly Velocity</h3>
@@ -1131,7 +1448,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
               </section>
 
               {/* Soundscapes Studio */}
-              <section className="glass-card" style={{ padding: '1.25rem' }}>
+              <section className="glass-card sounds-panel" style={{ padding: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.875rem' }}>
                   <div>
                     <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: '#F8FAFC' }}>Soundscape Studio</h3>
@@ -1159,7 +1476,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                 </div>
 
                 {/* Preset Chips */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, marginBottom: '0.875rem' }}>
+                <div className="sound-preset-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, marginBottom: '0.875rem' }}>
                   {soundList.map(s => {
                     const isSelected = currentSoundId === s.id;
                     return (
@@ -1230,6 +1547,41 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
             </div>
           </div>
         </main>
+
+        {/* ── MOBILE BOTTOM NAVIGATION BAR ── */}
+        <nav className="mobile-bottom-nav">
+          {[
+            { id: 'timer', icon: 'timer', label: 'Timer' },
+            { id: 'tasks', icon: 'check_circle', label: 'Tasks', badge: tasks.filter(t => !t.completed).length || null },
+            { id: 'analytics', icon: 'bar_chart', label: 'Velocity' },
+            { id: 'sounds', icon: isPlayingAudio ? 'graphic_eq' : 'music_note', label: 'Sounds', pulse: isPlayingAudio },
+            { id: 'settings', icon: 'tune', label: 'Settings' },
+          ].map(item => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  if (item.id === 'settings') {
+                    setIsSettingsOpen(true);
+                  } else {
+                    setActiveTab(item.id as any);
+                  }
+                }}
+                className={`mobile-tab-btn${isActive ? ' active' : ''}`}
+                title={item.label}
+              >
+                <div style={{ position: 'relative', display: 'inline-flex' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{item.icon}</span>
+                  {Boolean(item.badge) && <span className="mobile-tab-badge">{item.badge}</span>}
+                  {Boolean(item.pulse) && <span className="mobile-pulse-dot" />}
+                </div>
+                <span style={{ fontSize: 10, fontWeight: isActive ? 600 : 500 }}>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
 
         {/* ── SETTINGS MODAL ── */}
         {isSettingsOpen && (
