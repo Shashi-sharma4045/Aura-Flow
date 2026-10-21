@@ -39,6 +39,15 @@ function sanitizeAuthError(error) {
   if (msg.includes('user already registered') || msg.includes('already exists')) {
     return 'An account with this email already exists. Please sign in instead.';
   }
+  if (msg.includes('password') && (msg.includes('short') || msg.includes('weak') || msg.includes('least 6') || msg.includes('least 8'))) {
+    return 'Password does not meet minimum complexity requirements.';
+  }
+  if (msg.includes('same as') || msg.includes('different from')) {
+    return 'New password should be different from your old password.';
+  }
+  if (msg.includes('token') && (msg.includes('expired') || msg.includes('invalid') || msg.includes('not found'))) {
+    return 'The password reset link has expired or is invalid. Please request a new one.';
+  }
   return 'Authentication service error. Please try again later.';
 }
 
@@ -100,4 +109,15 @@ test('Security: Secure ID generation produces valid UUIDv4 strings', () => {
   assert.notEqual(id1, id2, 'IDs must be unique');
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   assert.equal(uuidRegex.test(id1), true, `ID ${id1} must match UUIDv4 format`);
+});
+
+test('Security: Password recovery error sanitization handles expired tokens & policy', () => {
+  assert.equal(
+    sanitizeAuthError({ message: 'Token has expired or is invalid' }),
+    'The password reset link has expired or is invalid. Please request a new one.'
+  );
+  assert.equal(
+    sanitizeAuthError({ message: 'New password should be different from old password' }),
+    'New password should be different from your old password.'
+  );
 });
