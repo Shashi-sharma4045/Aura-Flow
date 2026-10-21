@@ -21,7 +21,9 @@ const Login: React.FC<LoginProps> = ({
   onPasswordResetComplete,
 }) => {
   const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot' | 'update_password'>(initialMode);
+  const [resetMethod, setResetMethod] = useState<'link' | 'code'>('link');
   const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +40,33 @@ const Login: React.FC<LoginProps> = ({
       setAuthMode(initialMode);
     }
   }, [initialMode]);
+
+  // Detect Supabase auth URL hash errors (e.g. otp_expired from pre-clicked or expired email links)
+  useEffect(() => {
+    try {
+      const rawHash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+      const hashParams = new URLSearchParams(rawHash);
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const errorCode = hashParams.get('error_code') || searchParams.get('error_code');
+      const errorDesc = hashParams.get('error_description') || searchParams.get('error_description');
+
+      if (errorCode || errorDesc) {
+        if (errorCode === 'otp_expired' || errorDesc?.toLowerCase().includes('expired') || errorDesc?.toLowerCase().includes('invalid')) {
+          setError('This reset link has expired or was already used (email scanners often pre-click links). You can enter the 6-digit OTP code from your email below, or request a new link.');
+          setAuthMode('forgot');
+          setResetMethod('code');
+        } else {
+          setError(errorDesc?.replace(/\+/g, ' ') || 'Authentication error encountered.');
+        }
+        if (typeof window !== 'undefined' && window.history.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
+    } catch (e) {
+      console.warn('URL param parse error:', e);
+    }
+  }, []);
 
   // Initialize Google Identity Services
   useEffect(() => {
@@ -204,6 +233,42 @@ const Login: React.FC<LoginProps> = ({
       } else {
         setSuccess(true);
         setInfoMessage(`Password reset link dispatched to ${email}. Please check your inbox and click the link to set a new password.`);
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setError(sanitizeAuthError(err));
+    }
+  };
+
+  // Verify 6-digit OTP code from email
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setInfoMessage(null);
+
+    if (!isValidEmail(email)) {
+      setError('Please enter your valid registered email address.');
+      return;
+    }
+    const cleanToken = otpCode.trim();
+    if (!cleanToken || cleanToken.length < 6) {
+      setError('Please enter the 6-digit verification code from your email.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error: otpErr } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: cleanToken,
+        type: 'recovery',
+      });
+      setLoading(false);
+      if (otpErr) {
+        setError(sanitizeAuthError(otpErr));
+      } else {
+        setAuthMode('update_password');
+        setInfoMessage('Verification code confirmed! Please enter your new password.');
       }
     } catch (err: any) {
       setLoading(false);
@@ -539,55 +604,147 @@ const Login: React.FC<LoginProps> = ({
 
           {/* ── FORGOT PASSWORD FORM ── */}
           {authMode === 'forgot' && (
-            <form onSubmit={handleSendResetLink} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label htmlFor="reset-email" style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4 }}>
-                  REGISTERED ACCOUNT EMAIL
-                </label>
-                <div className="input-wrap">
-                  <span className="material-symbols-outlined input-icon">mail</span>
-                  <input
-                    id="reset-email"
-                    type="email"
-                    required
-                    placeholder="alex.creator@creativeflow.io"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="glass-input"
-                  />
-                </div>
+            <div>
+              {/* Method Toggle: Email Link vs 6-Digit OTP Code */}
+              <div className="auth-toggle-bar" style={{ marginBottom: '1.25rem' }}>
+                <button
+                  type="button"
+                  className={`auth-toggle-btn${resetMethod === 'link' ? ' active' : ''}`}
+                  onClick={() => { setResetMethod('link'); setError(null); setInfoMessage(null); }}
+                >
+                  Send Reset Link
+                </button>
+                <button
+                  type="button"
+                  className={`auth-toggle-btn${resetMethod === 'code' ? ' active' : ''}`}
+                  onClick={() => { setResetMethod('code'); setError(null); setInfoMessage(null); }}
+                >
+                  Enter 6-Digit Code
+                </button>
               </div>
 
-              {/* Status alerts */}
-              {error && (
-                <div style={{ padding: '0.625rem 0.875rem', borderRadius: 8, background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)', color: '#FB7185', fontSize: 12 }}>
-                  {error}
-                </div>
-              )}
-              {infoMessage && (
-                <div style={{ padding: '0.625rem 0.875rem', borderRadius: 8, background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#10B981', fontSize: 12 }}>
-                  {infoMessage}
-                </div>
-              )}
+              {resetMethod === 'link' ? (
+                <form onSubmit={handleSendResetLink} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label htmlFor="reset-email" style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4 }}>
+                      REGISTERED ACCOUNT EMAIL
+                    </label>
+                    <div className="input-wrap">
+                      <span className="material-symbols-outlined input-icon">mail</span>
+                      <input
+                        id="reset-email"
+                        type="email"
+                        required
+                        placeholder="alex.creator@creativeflow.io"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                  </div>
 
-              <button type="submit" disabled={loading} className="btn-submit">
-                {loading ? (
-                  <>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18, animation: 'spin 1s linear infinite' }}>progress_activity</span>
-                    <span>Sending Reset Link...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>send</span>
-                    <span>Send Password Reset Link</span>
-                  </>
-                )}
-              </button>
+                  {/* Status alerts */}
+                  {error && (
+                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: 8, background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)', color: '#FB7185', fontSize: 12 }}>
+                      {error}
+                    </div>
+                  )}
+                  {infoMessage && (
+                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: 8, background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#10B981', fontSize: 12 }}>
+                      {infoMessage}
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={loading} className="btn-submit">
+                    {loading ? (
+                      <>
+                        <span className="material-symbols-outlined" style={{ fontSize: 18, animation: 'spin 1s linear infinite' }}>progress_activity</span>
+                        <span>Sending Reset Link...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>send</span>
+                        <span>Send Password Reset Link</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label htmlFor="otp-email" style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4 }}>
+                      REGISTERED ACCOUNT EMAIL
+                    </label>
+                    <div className="input-wrap">
+                      <span className="material-symbols-outlined input-icon">mail</span>
+                      <input
+                        id="otp-email"
+                        type="email"
+                        required
+                        placeholder="alex.creator@creativeflow.io"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="glass-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="otp-token" style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 4 }}>
+                      6-DIGIT VERIFICATION CODE
+                    </label>
+                    <div className="input-wrap">
+                      <span className="material-symbols-outlined input-icon">pin</span>
+                      <input
+                        id="otp-token"
+                        type="text"
+                        required
+                        maxLength={8}
+                        placeholder="123456"
+                        value={otpCode}
+                        onChange={e => setOtpCode(e.target.value)}
+                        className="glass-input"
+                        style={{ letterSpacing: '0.25rem', fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
+                      />
+                    </div>
+                    <span style={{ fontSize: 10, color: '#64748B', marginTop: 4, display: 'block' }}>
+                      Check your email inbox or spam folder for the code from Supabase
+                    </span>
+                  </div>
+
+                  {/* Status alerts */}
+                  {error && (
+                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: 8, background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)', color: '#FB7185', fontSize: 12 }}>
+                      {error}
+                    </div>
+                  )}
+                  {infoMessage && (
+                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: 8, background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#10B981', fontSize: 12 }}>
+                      {infoMessage}
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={loading} className="btn-submit">
+                    {loading ? (
+                      <>
+                        <span className="material-symbols-outlined" style={{ fontSize: 18, animation: 'spin 1s linear infinite' }}>progress_activity</span>
+                        <span>Verifying Code...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>key</span>
+                        <span>Verify Code & Continue</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
 
               <button
                 type="button"
                 onClick={() => { setAuthMode('signin'); setError(null); setInfoMessage(null); }}
                 style={{
+                  width: '100%',
                   background: 'none',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: 8,
@@ -599,13 +756,13 @@ const Login: React.FC<LoginProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  marginTop: '0.25rem',
+                  marginTop: '0.75rem',
                 }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_back</span>
                 <span>Back to Sign In</span>
               </button>
-            </form>
+            </div>
           )}
 
           {/* ── UPDATE PASSWORD FORM (RECOVERY) ── */}
