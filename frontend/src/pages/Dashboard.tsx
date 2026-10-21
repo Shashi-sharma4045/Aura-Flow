@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { audioEngine, SoundType } from '../utils/audioEngine';
-import { generateSecureId } from '../utils/security';
+import { generateSecureId, isValidPassword, sanitizeAuthError } from '../utils/security';
 
 export interface TaskItem {
   id: string;
@@ -51,6 +51,41 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+
+  // In-dashboard password management
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordStatus, setPasswordStatus] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  const handleUpdateDashboardPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordStatus(null);
+    const pwCheck = isValidPassword(newPassword);
+    if (!pwCheck.valid) {
+      setPasswordStatus({ type: 'error', message: pwCheck.reason || 'Password must be at least 8 characters with letters & numbers.' });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordStatus({ type: 'error', message: 'Passwords do not match.' });
+      return;
+    }
+    setIsUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      setIsUpdatingPassword(false);
+      if (error) {
+        setPasswordStatus({ type: 'error', message: sanitizeAuthError(error) });
+      } else {
+        setPasswordStatus({ type: 'success', message: 'Password updated successfully!' });
+        setNewPassword('');
+        setConfirmNewPassword('');
+      }
+    } catch (err: any) {
+      setIsUpdatingPassword(false);
+      setPasswordStatus({ type: 'error', message: sanitizeAuthError(err) });
+    }
+  };
 
   // Soundscape state
   const [currentSoundId, setCurrentSoundId] = useState<SoundType>('rain');
@@ -1273,6 +1308,60 @@ const Dashboard: React.FC<DashboardProps> = ({ userEmail, onSignOut, onNavigateL
                     <span>Auto-start breaks after focus completion</span>
                     <input type="checkbox" checked={autoStartBreaks} onChange={e => setAutoStartBreaks(e.target.checked)} style={{ accentColor: '#F43F5E' }} />
                   </label>
+                </div>
+                <div style={{ paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>
+                    ACCOUNT SECURITY & PASSWORD
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <input
+                      type="password"
+                      placeholder="New password (min 8 chars)"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      className="glass-input"
+                      style={{ fontSize: 12, padding: '0.5rem 0.75rem' }}
+                    />
+                    <input
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={confirmNewPassword}
+                      onChange={e => setConfirmNewPassword(e.target.value)}
+                      className="glass-input"
+                      style={{ fontSize: 12, padding: '0.5rem 0.75rem' }}
+                    />
+                    {passwordStatus && (
+                      <div style={{
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: 6,
+                        fontSize: 11,
+                        background: passwordStatus.type === 'error' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                        border: `1px solid ${passwordStatus.type === 'error' ? 'rgba(244, 63, 94, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                        color: passwordStatus.type === 'error' ? '#FB7185' : '#10B981',
+                      }}>
+                        {passwordStatus.message}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      disabled={isUpdatingPassword || !newPassword}
+                      onClick={handleUpdateDashboardPassword}
+                      style={{
+                        padding: '0.5rem',
+                        borderRadius: 6,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#F8FAFC',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: isUpdatingPassword || !newPassword ? 'not-allowed' : 'pointer',
+                        opacity: isUpdatingPassword || !newPassword ? 0.6 : 1,
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {isUpdatingPassword ? 'Updating Password...' : 'Update Password'}
+                    </button>
+                  </div>
                 </div>
               </div>
 

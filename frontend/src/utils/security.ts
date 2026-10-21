@@ -55,8 +55,14 @@ export function sanitizeAuthError(error: any): string {
   if (msg.includes('user already registered') || msg.includes('already exists')) {
     return 'An account with this email already exists. Please sign in instead.';
   }
-  if (msg.includes('password') && (msg.includes('short') || msg.includes('weak'))) {
+  if (msg.includes('password') && (msg.includes('short') || msg.includes('weak') || msg.includes('least 6') || msg.includes('least 8'))) {
     return 'Password does not meet minimum complexity requirements.';
+  }
+  if (msg.includes('same as') || msg.includes('different from')) {
+    return 'New password should be different from your old password.';
+  }
+  if (msg.includes('token') && (msg.includes('expired') || msg.includes('invalid') || msg.includes('not found'))) {
+    return 'The password reset link has expired or is invalid. Please request a new one.';
   }
   return 'Authentication service error. Please try again later.';
 }

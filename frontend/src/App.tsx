@@ -8,6 +8,7 @@ const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [authenticatedEmail, setAuthenticatedEmail] = useState<string | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   const [isGuest, setIsGuest] = useState(false);
 
@@ -15,6 +16,15 @@ const App: React.FC = () => {
   const isLoggedIn = Boolean(session?.access_token) || (import.meta.env.DEV && isGuest);
 
   useEffect(() => {
+    // Check if initial URL or hash contains recovery token
+    const isRecoveryMode =
+      window.location.hash.includes('type=recovery') ||
+      window.location.search.includes('type=recovery');
+
+    if (isRecoveryMode) {
+      setIsPasswordRecovery(true);
+    }
+
     // 1. Check initial session from Supabase
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -24,8 +34,11 @@ const App: React.FC = () => {
       setIsLoadingAuth(false);
     });
 
-    // 2. Subscribe to auth state updates (sign in, sign out, OAuth redirect)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // 2. Subscribe to auth state updates (sign in, sign out, OAuth redirect, password recovery)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+      }
       setSession(session);
       if (session?.user?.email) {
         setAuthenticatedEmail(session.user.email);
@@ -77,7 +90,24 @@ const App: React.FC = () => {
 
   return (
     <Suspense fallback={suspenseFallback}>
-      {isLoggedIn ? (
+      {isPasswordRecovery ? (
+        <Login
+          initialMode="update_password"
+          onPasswordResetComplete={() => {
+            setIsPasswordRecovery(false);
+            if (typeof window !== 'undefined' && window.history.replaceState) {
+              window.history.replaceState(null, '', window.location.pathname);
+            }
+          }}
+          onLoginSuccess={(email) => {
+            setIsPasswordRecovery(false);
+            setAuthenticatedEmail(email);
+            if (typeof window !== 'undefined' && window.history.replaceState) {
+              window.history.replaceState(null, '', window.location.pathname);
+            }
+          }}
+        />
+      ) : isLoggedIn ? (
         <Dashboard
           userEmail={session?.user?.email || (isGuest ? 'guest@focusflow.local' : 'user@focusflow.io')}
           onSignOut={handleSignOut}
