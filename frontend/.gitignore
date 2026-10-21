@@ -1,0 +1,24 @@
+# Environment variables
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Production build output
+dist/
+dist-ssr/
+
+# Logs
+*.log
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

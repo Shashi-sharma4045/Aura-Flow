@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Fixed: Strict Content Security Policy mitigating XSS and unauthorized exfiltration -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.googleusercontent.com; connect-src 'self' https://*.supabase.co https://accounts.google.com http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>FocusFlow – Pomodoro Timer & Deep Work Dashboard</title>
+  <meta name="description" content="FocusFlow is a high-performance Pomodoro productivity dashboard featuring procedural ambient soundscapes, task velocity analytics, and deep work telemetry." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="canonical" href="https://focusflow.io/" />
+
+  <!-- Open Graph / Social Media Meta Tags -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://focusflow.io/" />
+  <meta property="og:title" content="FocusFlow – Deep Work & Pomodoro Dashboard" />
+  <meta property="og:description" content="Boost focus with procedural ambient soundscapes, intelligent Pomodoro intervals, and flow-state analytics." />
+  <meta property="og:image" content="https://focusflow.io/og-preview.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="FocusFlow – Deep Work & Pomodoro Dashboard" />
+  <meta name="twitter:description" content="Boost focus with procedural ambient soundscapes, intelligent Pomodoro intervals, and flow-state analytics." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/styles.css" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

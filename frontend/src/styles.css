@@ -1,0 +1,78 @@
+.login-page {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.login-form button {
+  margin-top: 0.5rem;
+}
+
+.app-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 1rem;
+}
+
+.timer {
+  margin: 1rem 0;
+}
+
+.time-display {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0.3rem;
+}
+
+.btn.primary {
+  background-color: #1976d2;
+  color: #fff;
+}
+
+.btn.secondary {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.task-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.task-list li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.add-task input {
+  padding: 0.4rem;
+  width: 70%;
+  margin-right: 0.5rem;
+}
