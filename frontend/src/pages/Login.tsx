@@ -8,7 +8,9 @@ interface LoginProps {
   onExploreGuest?: () => void;
 }
 
-const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) || '';
+const GOOGLE_CLIENT_ID =
+  (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) ||
+  '231491990306-iie30urntnqtjlmoinunre5cur2i69r5.apps.googleusercontent.com';
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess, onExploreGuest }) => {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
